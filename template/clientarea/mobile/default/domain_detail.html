@@ -1,0 +1,159 @@
+<!-- Dynadot domain mobile clientarea detail -->
+<style>
+  .furll-domain-mobile{padding:14px;background:#f5f7fa;color:#182230;font-size:14px}
+  .furll-domain-mobile *{box-sizing:border-box}
+  .fm-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:12px}
+  .fm-title{min-width:0}
+  .fm-title h2{margin:0;font-size:19px;line-height:1.35;word-break:break-all}
+  .fm-sub{margin:5px 0 0;color:#64748b;font-size:12px}
+  .fm-actions{display:flex;flex-direction:column;align-items:flex-end;gap:7px;flex-shrink:0}
+  .fm-badge{padding:3px 8px;border-radius:999px;font-size:11px;white-space:nowrap;background:#ecfdf5;color:#059669}
+  .fm-badge-sandbox{background:#f5f3ff;color:#7c3aed}
+  .fm-btn{min-height:34px;padding:7px 11px;border:1px solid #d0d5dd;border-radius:6px;background:#fff;color:#182230;font-size:13px;line-height:18px;cursor:pointer}
+  .fm-btn-primary{background:#2563eb;border-color:#2563eb;color:#fff}
+  .fm-btn-danger{color:#dc2626;border-color:#fecaca}
+  .fm-btn:disabled{opacity:.5;cursor:not-allowed}
+  .fm-card{margin-bottom:12px;padding:14px;border:1px solid #e5e7eb;border-radius:8px;background:#fff}
+  .fm-card-title{margin:0 0 11px;font-size:15px;font-weight:600}
+  .fm-grid{display:grid;grid-template-columns:1fr 1fr;gap:11px 14px}
+  .fm-item{min-width:0}
+  .fm-label{display:block;margin-bottom:3px;color:#64748b;font-size:11px}
+  .fm-value{display:block;word-break:break-all;line-height:1.45}
+  .fm-ns{display:flex;flex-direction:column;gap:7px;margin:0;padding:0;list-style:none}
+  .fm-ns li{padding:7px 9px;border:1px solid #e2e8f0;border-radius:5px;background:#f8fafc;font-family:Menlo,Consolas,monospace;font-size:12px;word-break:break-all}
+  .fm-ns-edit{display:flex;gap:6px;margin-bottom:7px}
+  .fm-ns-edit .fm-input{flex:1;min-width:0;font-family:Menlo,Consolas,monospace}
+  .fm-input{width:100%;min-height:34px;padding:7px 9px;border:1px solid #d0d5dd;border-radius:6px;background:#fff;color:#182230;font-size:13px}
+  .fm-input:focus{outline:none;border-color:#2563eb;box-shadow:0 0 0 2px rgba(37,99,235,.14)}
+  .fm-actions-row{display:flex;flex-wrap:wrap;gap:7px;margin-top:10px}
+  .fm-tip,.fm-msg{margin:9px 0 0;color:#94a3b8;font-size:12px;line-height:1.5}
+  .fm-msg-error{color:#dc2626}.fm-msg-success{color:#059669}
+  .fm-loading,.fm-error{padding:45px 12px;text-align:center;color:#94a3b8}.fm-error{color:#dc2626}
+  .fm-contact-row{display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid #f1f5f9}
+  .fm-contact-row:last-child{border-bottom:0;padding-bottom:0}.fm-contact-row:first-child{padding-top:0}
+  .fm-contact-label{color:#64748b;flex:0 0 72px;font-size:12px}.fm-contact-value{flex:1;text-align:right;word-break:break-all}
+  .fm-mask{position:fixed;inset:0;z-index:2000;display:flex;align-items:flex-end;background:rgba(15,23,42,.56)}
+  .fm-modal{width:100%;max-height:92vh;overflow:auto;border-radius:14px 14px 0 0;background:#fff}
+  .fm-modal-head{display:flex;align-items:center;justify-content:space-between;padding:15px 16px;border-bottom:1px solid #eef2f7}
+  .fm-modal-head h3{margin:0;font-size:16px}.fm-close{border:0;background:none;color:#64748b;font-size:23px;line-height:1;cursor:pointer}
+  .fm-modal-body{padding:15px 16px}.fm-modal-foot{display:flex;gap:8px;padding:12px 16px;border-top:1px solid #eef2f7}.fm-modal-foot .fm-btn{flex:1}
+  .fm-form-title{margin:0 0 8px;font-weight:600}.fm-radio{display:inline-flex;align-items:center;gap:5px;margin-right:14px;color:#334155;font-size:13px}
+  .fm-form{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0 15px;padding:11px;border:1px solid #eef2f7;border-radius:7px;background:#fafbfc}
+  .fm-field{min-width:0}.fm-field-wide{grid-column:1/-1}.fm-field label{display:block;margin-bottom:4px;color:#64748b;font-size:11px}
+  .fm-done{text-align:center;padding:22px 0}.fm-done-icon{width:44px;height:44px;margin:0 auto 10px;border-radius:50%;background:#ecfdf5;color:#059669;font-size:24px;line-height:44px;font-weight:700}
+  @media(max-width:360px){.fm-grid,.fm-form{grid-template-columns:1fr}.fm-field-wide{grid-column:auto}.fm-contact-label{flex-basis:64px}}
+</style>
+
+<div class="template" id="furllDomainMobile" v-cloak>
+  <div class="furll-domain-mobile">
+    <div class="fm-head">
+      <div class="fm-title"><h2>{{ domain }}</h2><p class="fm-sub" v-if="host.product_name || host.billing_cycle_name">{{ host.product_name }}<template v-if="host.product_name && host.billing_cycle_name"> · </template>{{ host.billing_cycle_name }}</p></div>
+      <div class="fm-actions">
+        <span class="fm-badge" v-if="statusName">{{ statusName }}</span>
+        <span class="fm-badge fm-badge-sandbox" v-if="mode === 'sandbox'">{{ lang.furll_domain_detail_sandbox }}</span>
+        <button class="fm-btn fm-btn-primary" v-if="canPush" @click="openPush">{{ lang.furll_domain_push_button }}</button>
+      </div>
+    </div>
+
+    <div v-if="loading" class="fm-loading">{{ lang.furll_domain_detail_loading }}</div>
+    <div v-else-if="host.status === 'Pending'" class="fm-error">{{ lang.furll_domain_provisioning_notice }}</div>
+    <div v-else-if="error" class="fm-error">{{ error }}</div>
+    <template v-else>
+      <div class="fm-card">
+        <h3 class="fm-card-title">{{ lang.furll_domain_detail_basic }}</h3>
+        <div class="fm-grid">
+          <div class="fm-item"><span class="fm-label">{{ lang.furll_domain_detail_status }}</span><span class="fm-value">{{ info.status || '--' }}</span></div>
+          <div class="fm-item"><span class="fm-label">{{ lang.furll_domain_detail_reg_time }}</span><span class="fm-value">{{ info.registration_date || '--' }}</span></div>
+          <div class="fm-item"><span class="fm-label">{{ lang.furll_domain_detail_exp_time }}</span><span class="fm-value">{{ info.expiration_date || '--' }}</span></div>
+          <div class="fm-item"><span class="fm-label">{{ lang.furll_domain_detail_panel_due_time }}</span><span class="fm-value">{{ host.due_time || '--' }}</span></div>
+          <div class="fm-item"><span class="fm-label">{{ lang.furll_domain_detail_privacy }}</span><span class="fm-value">{{ privacyLabel }}</span></div>
+          <div class="fm-item"><span class="fm-label">{{ lang.furll_domain_detail_lock }}</span><span class="fm-value">{{ lockLabel }}</span></div>
+          <div class="fm-item"><span class="fm-label">{{ lang.furll_domain_detail_auto_renew }}</span><span class="fm-value">{{ autoRenewLabel }}</span></div>
+          <div class="fm-item" v-if="host.renew_amount"><span class="fm-label">{{ lang.furll_domain_detail_renew_amount }}</span><span class="fm-value">{{ host.currency }} {{ host.renew_amount }}</span></div>
+        </div>
+      </div>
+
+      <div class="fm-card">
+        <div class="fm-head" style="margin-bottom:10px"><h3 class="fm-card-title" style="margin:0">{{ lang.furll_domain_detail_nameservers }}</h3><button class="fm-btn" v-if="canEditNs && !nsEditing" @click="startNsEdit">{{ lang.furll_domain_detail_ns_edit }}</button></div>
+        <div class="fm-item" v-if="glueType"><span class="fm-label">{{ lang.furll_domain_detail_glue_type }}</span><span class="fm-value">{{ glueTypeLabel }}</span></div>
+        <template v-if="!nsEditing"><ul class="fm-ns" v-if="nsList.length"><li v-for="(ns,i) in nsList" :key="i">{{ ns }}</li></ul><p v-else class="fm-tip">{{ lang.furll_domain_detail_ns_empty }}</p></template>
+        <template v-else>
+          <div class="fm-ns-edit" v-for="(ns,i) in nsDraft" :key="i"><input class="fm-input" v-model.trim="nsDraft[i]" :placeholder="lang.furll_domain_detail_ns_placeholder" :disabled="nsSaving"><button class="fm-btn fm-btn-danger" @click="removeNsRow(i)" :disabled="nsSaving">{{ lang.furll_domain_detail_ns_remove }}</button></div>
+          <div class="fm-actions-row"><button class="fm-btn" @click="addNsRow" :disabled="nsSaving">{{ lang.furll_domain_detail_ns_add }}</button><button class="fm-btn fm-btn-primary" @click="saveNameservers" :disabled="nsSaving || !nsDraft.length">{{ nsSaving ? lang.furll_domain_detail_ns_saving : lang.furll_domain_detail_ns_save }}</button><button class="fm-btn" @click="cancelNsEdit" :disabled="nsSaving">{{ lang.furll_domain_detail_ns_cancel }}</button></div>
+        </template>
+        <p class="fm-msg" :class="nsMsgType === 'error' ? 'fm-msg-error' : 'fm-msg-success'" v-if="nsMsg">{{ nsMsg }}</p>
+      </div>
+
+      <div class="fm-card"><div class="fm-head" style="margin-bottom:10px"><h3 class="fm-card-title" style="margin:0">{{ lang.furll_domain_info_template_manage }}</h3><button class="fm-btn fm-btn-primary" @click="openTemplate">{{ lang.furll_domain_info_template_add }}</button></div><div class="fm-contact-row" v-for="item in templates" :key="item.id"><span class="fm-contact-value" style="text-align:left"><strong>{{ item.name }}</strong> · ID {{ item.dynadot_contact_id }}</span><span><button class="fm-btn" @click="editTemplate(item)">{{ lang.furll_domain_info_template_edit }}</button></span></div><p class="fm-tip" v-if="!templates.length">{{ lang.furll_domain_info_template_empty }}</p></div>
+
+      <div class="fm-card">
+        <h3 class="fm-card-title">{{ lang.furll_domain_detail_contacts }}</h3>
+        <div v-if="contactRows.length"><div class="fm-contact-row" v-for="(row,i) in contactRows" :key="i"><span class="fm-contact-label">{{ row.label }}</span><span class="fm-contact-value">{{ row.value }}</span></div></div>
+        <p v-else class="fm-tip">{{ lang.furll_domain_detail_empty }}</p>
+      </div>
+    </template>
+
+    <div class="fm-mask" v-if="templateModal.show"><div class="fm-modal"><div class="fm-modal-head"><h3>{{ lang.furll_domain_info_template_manage }}</h3><button class="fm-close" @click="closeTemplate">&times;</button></div><div class="fm-modal-body"><div class="fm-field"><label>{{ lang.furll_domain_info_template_name }}</label><input class="fm-input" v-model.trim="templateModal.name"></div><div class="fm-field" v-for="f in templateFields" :key="f.key" v-if="f.key !== 'phone_cc' && f.key !== 'phone'"><label>{{ f.label }}</label><input class="fm-input" v-model.trim="templateModal.contact[f.key]" :list="f.key === 'country' ? 'furll-client-country-list-mobile' : null"></div><div class="fm-field"><label>{{ lang.furll_domain_detail_contact_phone }}</label><span class="phone-fields"><input class="fm-input phone-cc" v-model.trim="templateModal.contact.phone_cc" placeholder="+86"><input class="fm-input" v-model.trim="templateModal.contact.phone"></span></div><datalist id="furll-client-country-list-mobile"><option v-for="c in countries" :key="c.iso" :value="c.iso">{{ c.name_zh || c.name }}</option></datalist><p class="fm-msg fm-msg-error" v-if="templateModal.msg">{{ templateModal.msg }}</p></div><div class="fm-modal-foot"><button class="fm-btn" @click="closeTemplate">{{ lang.furll_domain_push_cancel }}</button><button class="fm-btn fm-btn-primary" @click="saveTemplate">{{ lang.furll_domain_info_template_save }}</button></div></div></div>
+
+    <div class="fm-mask" v-if="push.show" @click.self="closePush">
+      <div class="fm-modal">
+        <div class="fm-modal-head"><h3>{{ lang.furll_domain_push_title }}</h3><button class="fm-close" @click="closePush" :disabled="push.submitting">&times;</button></div>
+        <div class="fm-modal-body">
+          <div v-if="push.done" class="fm-done"><div class="fm-done-icon">&#10003;</div><div>{{ push.doneMsg }}</div></div>
+          <template v-else>
+            <p class="fm-form-title">{{ lang.furll_domain_push_ask_contact }}</p>
+            <label class="fm-radio"><input type="radio" value="0" v-model="push.modify">{{ lang.furll_domain_push_no }}</label><label class="fm-radio"><input type="radio" value="1" v-model="push.modify">{{ lang.furll_domain_push_yes }}</label>
+            <div class="fm-form" v-if="push.modify === '1'"><div class="fm-field fm-field-wide"><label>{{ lang.furll_domain_info_template_select }}</label><select class="fm-input" v-model="push.templateId"><option value="">{{ lang.furll_domain_info_template_select }}</option><option v-for="item in templates" :key="item.id" :value="item.id">{{ item.name }} (#{{ item.dynadot_contact_id }})</option></select></div></div>
+            <p class="fm-form-title">{{ lang.furll_domain_push_target_label }}</p>
+            <div class="fm-form" style="margin-top:8px;margin-bottom:0"><div class="fm-field"><label>{{ lang.furll_domain_push_target_id }}</label><input class="fm-input" type="number" v-model.trim="push.targetClientId" :placeholder="lang.furll_domain_push_target_id_ph"></div><div class="fm-field"><label>{{ lang.furll_domain_push_target_account }}</label><input class="fm-input" v-model.trim="push.targetAccount" :placeholder="lang.furll_domain_push_target_account_ph"></div></div>
+            <p class="fm-msg fm-msg-error" v-if="push.msg">{{ push.msg }}</p>
+          </template>
+        </div>
+        <div class="fm-modal-foot" v-if="!push.done"><button class="fm-btn" @click="closePush" :disabled="push.submitting">{{ lang.furll_domain_push_cancel }}</button><button class="fm-btn fm-btn-primary" @click="submitPush" :disabled="push.submitting">{{ push.submitting ? lang.furll_domain_push_submitting : lang.furll_domain_push_confirm }}</button></div>
+        <div class="fm-modal-foot" v-else><button class="fm-btn fm-btn-primary" @click="goHostList">{{ lang.furll_domain_push_back_list }}</button></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="/plugins/server/furll_dynadot_domain/template/clientarea/pc/default/lang/index.js?v=1.1.0"></script>
+<script>
+(function () {
+  if (window.furllDomainMobileLoaded) return;
+  window.furllDomainMobileLoaded = true;
+  Vue.prototype.lang = Object.assign(window.lang || {}, window.module_lang || {});
+  new Vue({
+    el: '#furllDomainMobile',
+    data: function () { return {
+      id: 0, loading: true, error: '', data: null, nsData: null, nsEditing: false, nsDraft: [], nsSaving: false, nsMsg: '', nsMsgType: 'error',
+      push: { show:false, modify:'0', templateId:'', targetClientId:'', targetAccount:'', contact:{name:'',org:'',email:'',phone:'',address1:'',city:'',state:'',zip:'',country:''}, submitting:false, msg:'', done:false, doneMsg:'' }, countries:[], templates:[], templateModal:{show:false,id:0,name:'',contact:{first_name:'',last_name:'',org:'',email:'',phone_cc:'+86',phone:'',address1:'',city:'',state:'',zip:'',country:''},msg:''}
+    }; },
+    computed: {
+      host: function(){return (this.data&&this.data.host)||{};}, info:function(){return (this.data&&this.data.info)||{};}, contact:function(){return (this.data&&this.data.registrant_contact)||{};}, domain:function(){return (this.data&&this.data.domain)||this.host.name||'';}, mode:function(){return (this.data&&this.data.mode)||'';}, nsList:function(){return (this.nsData&&this.nsData.nameserver_list)||this.info.nameservers||[];}, glueType:function(){return (this.nsData&&this.nsData.glue_type)||'';}, canEditNs:function(){return this.host.status==='Active';}, canPush:function(){return this.host.status==='Active';},
+      statusName:function(){var m={Unpaid:'furll_domain_detail_status_unpaid',Pending:'furll_domain_detail_status_pending',Active:'furll_domain_detail_status_active',Suspended:'furll_domain_detail_status_suspended',Deleted:'furll_domain_detail_status_deleted',Failed:'furll_domain_detail_status_failed'};return m[this.host.status]?this.lang[m[this.host.status]]:(this.host.status||'');},
+      privacyLabel:function(){var m={full:'furll_domain_detail_privacy_full',partial:'furll_domain_detail_privacy_partial',off:'furll_domain_detail_privacy_off'};return m[this.info.privacy]?this.lang[m[this.info.privacy]]:(this.info.privacy||'--');}, lockLabel:function(){return typeof this.info.locked!=='boolean'?'--':(this.info.locked?this.lang.furll_domain_detail_lock_on:this.lang.furll_domain_detail_lock_off);}, autoRenewLabel:function(){return typeof this.info.auto_renew!=='boolean'?(this.info.renew_option||'--'):(this.info.auto_renew?this.lang.furll_domain_detail_auto_renew_on:this.lang.furll_domain_detail_auto_renew_off);},
+      glueTypeLabel:function(){var gt=String(this.glueType||'').toUpperCase();if(gt==='DNS')return this.lang.furll_domain_detail_glue_dns||'Dynadot DNS Hosting';if(gt==='NAME_SERVERS'){var a=this.nsList;return !a.length||a.every(function(ns){return /(^|\.)dynadot\.com$/i.test(String(ns||'').trim());})?(this.lang.furll_domain_detail_glue_dns||'Dynadot DNS Hosting'):(this.lang.furll_domain_detail_glue_name_servers||'Custom DNS');}return this.glueType||'--';},
+      contactRows:function(){var c=this.contact, name=c.name||[c.first_name,c.last_name].filter(function(v){return v;}).join(' '), fields=[['furll_domain_detail_contact_name',name],['furll_domain_detail_contact_org',c.org],['furll_domain_detail_contact_email',c.email],['furll_domain_detail_contact_phone',c.phone],['furll_domain_detail_contact_address',c.address1],['furll_domain_detail_contact_city',c.city],['furll_domain_detail_contact_state',c.state],['furll_domain_detail_contact_zip',c.zip],['furll_domain_detail_contact_country',c.country]];return fields.filter(function(f){return f[1];}).map(function(f){return {label:this.lang[f[0]],value:f[1]};},this);},
+      templateFields:function(){return [{key:'first_name',label:this.lang.furll_domain_detail_contact_first_name},{key:'last_name',label:this.lang.furll_domain_detail_contact_last_name},{key:'org',label:this.lang.furll_domain_detail_contact_org},{key:'email',label:this.lang.furll_domain_detail_contact_email},{key:'phone_cc',label:this.lang.furll_domain_detail_contact_phone_cc},{key:'phone',label:this.lang.furll_domain_detail_contact_phone},{key:'address1',label:this.lang.furll_domain_detail_contact_address},{key:'city',label:this.lang.furll_domain_detail_contact_city},{key:'state',label:this.lang.furll_domain_detail_contact_state},{key:'zip',label:this.lang.furll_domain_detail_contact_zip},{key:'country',label:this.lang.furll_domain_detail_contact_country}];},
+      pushFields:function(){return [{key:'name',label:this.lang.furll_domain_detail_contact_name,placeholder:this.lang.furll_domain_push_contact_ph_name},{key:'org',label:this.lang.furll_domain_detail_contact_org,placeholder:this.lang.furll_domain_push_contact_ph_org},{key:'email',label:this.lang.furll_domain_detail_contact_email,placeholder:'name@example.com'},{key:'phone',label:this.lang.furll_domain_detail_contact_phone,placeholder:this.lang.furll_domain_push_contact_ph_phone},{key:'address1',label:this.lang.furll_domain_detail_contact_address,placeholder:this.lang.furll_domain_push_contact_ph_address},{key:'city',label:this.lang.furll_domain_detail_contact_city,placeholder:this.lang.furll_domain_push_contact_ph_city},{key:'state',label:this.lang.furll_domain_detail_contact_state,placeholder:this.lang.furll_domain_push_contact_ph_state},{key:'zip',label:this.lang.furll_domain_detail_contact_zip,placeholder:this.lang.furll_domain_push_contact_ph_zip},{key:'country',label:this.lang.furll_domain_detail_contact_country,placeholder:this.lang.furll_domain_push_contact_ph_country}];}
+    },
+    methods: {
+      loadCountries:function(){var self=this;Axios.get('/country').then(function(r){self.countries=(r.data&&r.data.data&&r.data.data.list)||[];});},
+      loadTemplates:function(){var self=this;Axios.get('/furll_dynadot_domain/info_templates',{params:{server_id:this.host.server_id}}).then(function(r){self.templates=(r.data&&r.data.data&&r.data.data.list)||[];});},
+      openTemplate:function(){this.templateModal.show=true;this.templateModal.id=0;this.templateModal.name='';this.templateModal.msg='';},
+      editTemplate:function(item){this.templateModal.show=true;this.templateModal.id=item.id;this.templateModal.name=item.name;this.templateModal.contact=Object.assign({},item.contact);},
+      closeTemplate:function(){this.templateModal.show=false;},
+      saveTemplate:function(){var self=this,m=this.templateModal;Axios({method:m.id?'put':'post',url:'/furll_dynadot_domain/info_templates'+(m.id?'/'+m.id:''),data:{id:m.id,name:m.name,server_id:this.host.server_id,contact:m.contact}}).then(function(r){if(r.data&&r.data.status===200){m.show=false;self.loadTemplates();}else m.msg=(r.data&&r.data.msg)||self.lang.furll_domain_info_template_save_failed;});},
+      removeTemplate:function(item){var self=this;if(window.confirm(this.lang.furll_domain_info_template_delete_confirm))Axios.delete('/furll_dynadot_domain/info_templates/'+item.id).then(function(){self.loadTemplates();});},
+      openPush:function(){this.loadTemplates();var c=this.contact||{},p=this.push;p.show=true;p.templateId='';p.done=false;p.msg='';p.modify='0';p.targetClientId='';p.targetAccount='';p.contact={name:c.name||[c.first_name,c.last_name].filter(function(v){return v;}).join(' '),org:c.org||'',email:c.email||'',phone:c.phone||'',address1:c.address1||'',city:c.city||'',state:c.state||'',zip:c.zip||'',country:c.country||''};},
+      closePush:function(){if(!this.push.submitting)this.push.show=false;},
+      submitPush:function(){var self=this,p=this.push;if(!String(p.targetClientId||'').trim()||!String(p.targetAccount||'').trim()){p.msg=this.lang.furll_domain_push_param_invalid;return;}if(p.modify==='1'&&['name','email','phone','address1','city','state','zip','country'].some(function(k){return !String(p.contact[k]||'').trim();})){p.msg=this.lang.furll_domain_push_contact_invalid;return;}p.submitting=true;p.msg='';var body={target_client_id:parseInt(String(p.targetClientId).trim(),10),target_account:String(p.targetAccount).trim(),modify_contact:p.modify==='1'};if(body.modify_contact){if(!p.templateId){p.msg=self.lang.furll_domain_info_template_required;return;}body.info_template_id=parseInt(p.templateId,10);}Axios.post('/host/'+this.id+'/furll_dynadot_domain/push',body).then(function(r){if(r.data&&r.data.status===200){p.done=true;p.doneMsg=self.lang.furll_domain_push_success;}else p.msg=(r.data&&r.data.msg)||self.lang.furll_domain_push_failed;}).catch(function(e){p.msg=(e&&e.data&&e.data.msg)||self.lang.furll_domain_push_failed;}).finally(function(){p.submitting=false;});},
+      goHostList:function(){window.location.href='/host';},
+      loadNameservers:function(){var self=this;Axios.get('/host/'+this.id+'/furll_dynadot_domain/nameservers').then(function(r){if(r.data&&r.data.status===200)self.nsData=r.data.data;}).catch(function(){});},
+      startNsEdit:function(){this.nsDraft=(this.nsList||[]).slice();if(!this.nsDraft.length)this.nsDraft.push('');this.nsEditing=true;this.nsMsg='';}, cancelNsEdit:function(){this.nsEditing=false;this.nsDraft=[];this.nsMsg='';}, addNsRow:function(){if(this.nsDraft.length<13)this.nsDraft.push('');}, removeNsRow:function(i){this.nsDraft.splice(i,1);},
+      saveNameservers:function(){var self=this,list=this.nsDraft.map(function(v){return String(v||'').trim().toLowerCase();}),re=/^(?=.{1,253}$)(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}$/;if(!list.length||list.some(function(v){return !re.test(v);})||new Set(list).size!==list.length){self.nsMsgType='error';self.nsMsg=self.lang.furll_domain_detail_ns_invalid;return;}self.nsSaving=true;Axios.put('/host/'+this.id+'/furll_dynadot_domain/nameservers',{nameserver_list:list}).then(function(r){if(r.data&&r.data.status===200){self.nsEditing=false;self.nsDraft=[];self.nsMsgType='success';self.nsMsg=self.lang.furll_domain_detail_ns_save_success;self.loadNameservers();}else{self.nsMsgType='error';self.nsMsg=(r.data&&r.data.msg)||self.lang.furll_domain_detail_ns_save_failed;}}).catch(function(e){self.nsMsgType='error';self.nsMsg=(e&&e.data&&e.data.msg)||self.lang.furll_domain_detail_ns_save_failed;}).finally(function(){self.nsSaving=false;});}
+    },
+    created:function(){var m=window.location.search.match(/[?&]id=([^&]+)/);this.id=parseInt(m?decodeURIComponent(m[1]):0,10);if(this.id<=0){this.error=this.lang.furll_domain_detail_load_failed;this.loading=false;return;}var self=this;Axios.get('/host/'+this.id+'/furll_dynadot_domain/domain_info').then(function(r){if(r.data&&r.data.status===200)self.data=r.data.data;else self.error=(r.data&&r.data.msg)||self.lang.furll_domain_detail_load_failed;}).catch(function(e){self.error=(e&&e.data&&e.data.msg)||self.lang.furll_domain_detail_load_failed;}).finally(function(){self.loading=false;self.loadTemplates();});this.loadNameservers();this.loadCountries();}
+  });
+})();
+</script>

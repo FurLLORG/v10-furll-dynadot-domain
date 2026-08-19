@@ -1,0 +1,32 @@
+<!-- FurLLORG Dynadot 域名模块 - 后台接口配置 -->
+<div class="common_config">
+  <com-config>
+    <div class="t-card furll-dynadot-config">
+      <p class="com-tit"><span>{{lang.furll_domain_config_title}}</span></p>
+      <p class="s-tip third-text-color" v-if="serverName">{{lang.furll_domain_config_server}}：{{serverName}}</p>
+      <p class="s-tip third-text-color" v-if="!serverId">{{lang.furll_domain_no_server}}</p>
+      <t-form v-if="serverId" :data="form" ref="configForm" @submit="onSubmit" label-align="top"
+        :rules="rules">
+        <t-form-item :label="lang.furll_domain_mode" name="mode">
+          <t-radio-group v-model="form.mode" :options="modeOptions"></t-radio-group>
+          <p class="s-tip third-text-color">{{lang.furll_domain_mode_tip}}</p>
+        </t-form-item>
+        <t-form-item :label="lang.furll_domain_api_key" name="api_key">
+          <t-input v-model="form.api_key" :placeholder="lang.furll_domain_api_key_placeholder"></t-input>
+        </t-form-item>
+        <t-form-item :label="lang.furll_domain_api_secret" name="api_secret">
+          <t-input v-model="form.api_secret" type="password"
+            :placeholder="lang.furll_domain_api_secret_placeholder"></t-input>
+          <p class="s-tip third-text-color" v-if="secretConfigured">{{lang.furll_domain_api_secret_configured}}</p>
+        </t-form-item>
+        <t-form-item>
+          <t-button theme="primary" type="submit" :loading="submitLoading">{{lang.furll_domain_save}}</t-button>
+        </t-form-item>
+      </t-form>
+    </div>
+  </com-config>
+</div>
+<input type="hidden" id="furll_dynadot_server_id" value="{$server_id}">
+
+<script src="/plugins/server/furll_dynadot_domain/template/admin/lang/index.js"></script>
+<script src="/plugins/server/furll_dynadot_domain/template/admin/js/server_config.js"></script>

@@ -1,0 +1,69 @@
+<div class="furll-domain-cart" id="furll-domain-cart">
+  <div class="domain-search-head">
+    <h1>{{lang.furll_domain_search_title}}</h1>
+    <p>{{lang.furll_domain_search_hint}}</p>
+  </div>
+  <div class="domain-search-form">
+    <input v-model="domain" type="text" :placeholder="lang.furll_domain_search_placeholder" @input="result=null;error=''" @keyup.enter="search">
+    <button type="button" @click="search" :disabled="loading">{{loading ? lang.furll_domain_searching : lang.furll_domain_search_button}}</button>
+  </div>
+  <p class="domain-error" v-if="error">{{error}}</p>
+  <div class="domain-result" v-if="result">
+    <div class="domain-result-top"><strong>{{result.domain_name || domain}}</strong><span :class="result.available ? 'available' : 'unavailable'">{{result.available ? lang.furll_domain_available : lang.furll_domain_unavailable}}</span></div>
+    <p class="sandbox-tip" v-if="result.mode === 'sandbox'">{{lang.furll_domain_sandbox_tip}}</p><p class="domain-error" v-if="isCnDomain">{{lang.furll_domain_cn_not_supported}}</p>
+    <p class="premium" v-if="result.premium === 'yes'">{{lang.furll_domain_premium}}</p>
+    <div class="domain-options" v-if="result.available && !isCnDomain">
+      <label>{{lang.furll_domain_duration}} <select v-model.number="duration"><option v-for="year in 10" :value="year">{{year}} {{lang.furll_domain_year}}</option></select></label>
+      <label><input type="checkbox" v-model="privacy"> {{lang.furll_domain_privacy}}</label>
+    </div>
+    <div class="domain-price" v-if="result.price_list && result.price_list.length">
+      <div><small>{{lang.furll_domain_registration}}</small><strong>{{price(result.price_list[0].registration_price)}} {{priceCurrency(result.price_list[0])}}</strong></div>
+      <div><small>{{lang.furll_domain_renewal}}</small><strong>{{price(result.price_list[0].renewal_price)}} {{priceCurrency(result.price_list[0])}}</strong></div>
+    </div>
+    <div class="domain-contact" v-if="result.available && !isCnDomain">
+      <h3>{{lang.furll_domain_contact_title}}</h3>
+      <select v-model="info_template_id" class="template-select">
+        <option value="">{{lang.furll_domain_info_template_select}}</option>
+        <option v-for="item in templates" :key="item.id" :value="item.id">{{item.name}} (#{{item.dynadot_contact_id}})</option>
+      </select>
+      <p class="template-empty" v-if="!templates.length">{{lang.furll_domain_info_template_empty}}</p>
+      <button type="button" class="template-create-button" v-if="!templates.length" @click="templateCreate.show=true">{{lang.furll_domain_info_template_create_here}}</button>
+      <div class="template-create" v-if="templateCreate.show">
+        <input v-model.trim="templateCreate.name" type="text" :placeholder="lang.furll_domain_info_template_name">
+        <div class="contact-grid">
+          <label>{{lang.furll_domain_contact_first_name}}<input v-model.trim="templateCreate.contact.first_name" type="text"></label>
+          <label>{{lang.furll_domain_contact_last_name}}<input v-model.trim="templateCreate.contact.last_name" type="text"></label>
+          <label>{{lang.furll_domain_contact_org}}<input v-model.trim="templateCreate.contact.org" type="text"></label>
+          <label>{{lang.furll_domain_contact_email}}<input v-model.trim="templateCreate.contact.email" type="email"></label>
+          <label>{{lang.furll_domain_contact_phone}}<span class="phone-fields"><input v-model.trim="templateCreate.contact.phone_cc" class="phone-cc" type="text" placeholder="+86"><input v-model.trim="templateCreate.contact.phone" type="text"></span></label>
+          <label>{{lang.furll_domain_contact_address1}}<input v-model.trim="templateCreate.contact.address1" type="text"></label>
+          <label>{{lang.furll_domain_contact_city}}<input v-model.trim="templateCreate.contact.city" type="text"></label>
+          <label>{{lang.furll_domain_contact_state}}<input v-model.trim="templateCreate.contact.state" type="text"></label>
+          <label>{{lang.furll_domain_contact_zip}}<input v-model.trim="templateCreate.contact.zip" type="text"></label>
+          <label>{{lang.furll_domain_contact_country}}<input v-model.trim="templateCreate.contact.country" list="furll-cart-country-list-pc" type="text" :placeholder="lang.furll_domain_contact_country_placeholder"><datalist id="furll-cart-country-list-pc"><option v-for="c in countries" :key="c.iso" :value="c.iso">{{c.name_zh || c.name}}</option></datalist></label>
+        </div>
+        <button type="button" class="template-create-button" :disabled="templateCreate.saving" @click="createTemplateHere">{{templateCreate.saving ? lang.furll_domain_info_template_saving : lang.furll_domain_info_template_save}}</button>
+        <p class="template-empty" v-if="templateCreate.error">{{templateCreate.error}}</p>
+      </div>
+      <p class="template-summary" v-if="selectedTemplate">{{selectedTemplate.contact.first_name}} {{selectedTemplate.contact.last_name}} · {{selectedTemplate.contact.email}}</p>
+    </div>
+    <button type="button" class="buy-button" v-if="result.available && !isCnDomain" :disabled="buying" @click="buy">{{buying ? lang.furll_domain_adding : lang.furll_domain_buy}}</button>
+  </div>
+</div>
+<style>
+.furll-domain-cart{max-width:980px;margin:32px auto;padding:48px 56px;color:#182230;background:#fff;border:1px solid #e5e7eb;border-radius:8px}.domain-search-head h1{margin:10px 0 8px;font-size:32px}.domain-search-head p{margin:0;color:#64748b}.domain-search-form{display:flex;gap:10px;margin:32px 0}.domain-search-form input{flex:1;padding:14px 16px;border:1px solid #cbd5e1;border-radius:6px;font-size:15px}.domain-search-form button,.buy-button{padding:12px 18px;border:1px solid #2563eb;border-radius:6px;color:#fff;background:#2563eb;cursor:pointer}.domain-search-form button:disabled,.buy-button:disabled{opacity:.6;cursor:wait}.domain-error{color:#dc2626}.domain-result{padding:24px;border:1px solid #dbe3ec;border-radius:8px}.domain-result-top,.domain-price,.domain-options{display:flex;justify-content:space-between;gap:24px;flex-wrap:wrap}.domain-result-top strong{font-size:21px}.available{color:#059669}.unavailable{color:#dc2626}.premium{color:#b45309}.sandbox-tip{margin:12px 0;color:#b45309;font-size:13px}.domain-options{margin:20px 0}.domain-options select{margin-left:8px;padding:7px;border:1px solid #cbd5e1;border-radius:4px}.domain-price{margin-top:24px}.domain-price div{display:grid;gap:6px}.domain-price small{color:#64748b}.domain-price strong{font-size:18px}.domain-contact{margin-top:28px;padding-top:24px;border-top:1px solid #e5e7eb}.domain-contact h3{margin:0 0 16px;font-size:17px}.contact-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}.contact-grid label{display:grid;gap:6px;color:#64748b;font-size:13px}.contact-grid input,.contact-grid select,.template-select{padding:10px 12px;border:1px solid #cbd5e1;border-radius:6px;font-size:14px}.template-select{width:100%}.template-empty{color:#dc2626;font-size:13px}.template-summary{color:#475569;font-size:13px}.template-create{margin-top:12px;padding:14px;border:1px solid #dbe3ec;border-radius:6px}.template-create>input{width:100%;padding:10px 12px;margin-bottom:12px;border:1px solid #cbd5e1;border-radius:6px}.phone-fields{display:flex;gap:6px}.phone-fields .phone-cc{width:78px}.phone-fields input:last-child{flex:1}.template-create-button{padding:9px 14px;border:1px solid #2563eb;border-radius:6px;color:#fff;background:#2563eb;cursor:pointer}.template-create-button:disabled{opacity:.6}.buy-button{margin-top:24px;width:100%}@media (max-width:700px){.furll-domain-cart{margin:16px;padding:28px 20px}.domain-search-form{flex-wrap:wrap}.domain-search-form input{width:100%;min-width:0;height:46px}.domain-search-form button{width:100%;height:46px}.contact-grid{grid-template-columns:1fr}}
+</style>
+<script src="/plugins/server/furll_dynadot_domain/template/cart/pc/default/lang/index.js?v=1.0.1"></script>
+<script>
+(function(){
+  Vue.prototype.lang = Object.assign(window.lang || {}, window.module_lang || {});
+  new Vue({el:'#furll-domain-cart',data:{domain:'',loading:false,buying:false,error:'',result:null,duration:1,privacy:false,countries:[],templates:[],info_template_id:'',templateCreate:{show:false,saving:false,error:'',name:'',contact:{first_name:'',last_name:'',org:'',email:'',phone_cc:'+86',phone:'',address1:'',city:'',state:'',zip:'',country:''}},contact:{first_name:'',last_name:'',org:'',email:'',phone_cc:'+86',phone:'',address1:'',city:'',state:'',zip:'',country:''}},computed:{selectedTemplate:function(){var id=String(this.info_template_id);return this.templates.filter(function(item){return String(item.id)===id})[0]||null},isCnDomain:function(){return /\.cn$/i.test(String((this.result&&this.result.domain_name)||this.domain||''))}},methods:{
+    async loadTemplates(){try{var r=await Axios.get('/furll_dynadot_domain/info_templates',{params:{server_id:this.result&&this.result.server_id}});this.templates=(r.data&&r.data.data&&r.data.data.list)||[]}catch(e){this.templates=[]}},
+    async createTemplateHere(){var t=this.templateCreate,c=t.contact;if(!t.name||!c.first_name||!c.last_name||!c.email||!c.phone||!c.address1||!c.city||!c.state||!c.zip||!c.country){t.error=this.lang.furll_domain_contact_required;return}t.saving=true;t.error='';try{var r=await Axios.post('/furll_dynadot_domain/info_templates',{name:t.name,server_id:this.result.server_id,contact:Object.assign({},c)});if(r.data&&r.data.status===200){this.templates=[r.data.data].concat(this.templates);this.info_template_id=r.data.data.id;t.show=false}else{t.error=(r.data&&r.data.msg)||this.lang.furll_domain_info_template_save_failed}}catch(e){t.error=(e&&e.data&&e.data.msg)||this.lang.furll_domain_info_template_save_failed}finally{t.saving=false}},
+
+    async search(){this.error='';this.result=null;if(!this.domain.trim()){this.error=this.lang.furll_domain_search_empty;return}this.loading=true;try{var p=new URLSearchParams(location.search);var r=await Axios.get('/product/'+encodeURIComponent(p.get('id'))+'/furll_dynadot_domain/search',{params:{domain:this.domain,product_id:p.get('id')}});if(r.data.status!==200)throw new Error(r.data.msg);this.result=r.data.data;this.domain=this.result.domain_name||this.domain;this.loadTemplates()}catch(e){this.error=((e&&e.data&&e.data.msg)||(e&&e.message))||this.lang.furll_domain_search_failed}finally{this.loading=false}},
+    async prefillContact(){if(this.countries.length===0){try{var c=await Axios.get('/country');this.countries=(c.data&&c.data.data&&c.data.data.list)||[]}catch(e){this.countries=[]}}try{var r=await Axios.get('/account');var a=(r.data&&r.data.data&&r.data.data.account)||{};var name=(a.username||'').trim();var parts=name.split(/\s+/);this.contact.first_name=parts[0]||'';this.contact.last_name=parts.length>1?parts.slice(1).join(' '):'';this.contact.org=a.company||'';this.contact.email=a.email||'';this.contact.phone=(a.phone_code&&a.phone)?('+'+a.phone_code+'.'+a.phone):'';this.contact.address1=a.address||'';var cur=this.countries.filter(function(c){return c.id===a.country_id})[0];this.contact.country=cur?cur.iso:''}catch(e){}},
+    async buy(){if(!this.result||!this.result.available)return;if(!this.info_template_id){this.error=this.lang.furll_domain_info_template_required;return}this.buying=true;this.error='';try{var p=new URLSearchParams(location.search);var domain=this.domain.toLowerCase().trim();var config_options={domain:domain,duration:this.duration,privacy:this.privacy?'full':'off',register_premium:this.result.premium==='yes',info_template_id:Number(this.info_template_id)};var r=await Axios.post('/cart',{product_id:Number(p.get('id')),config_options:config_options,qty:1,customfield:{is_domain:1}});if(r.data.status!==200)throw new Error(r.data.msg);location.href='/cart/shoppingCar.htm'}catch(e){var msg=((e&&e.data&&e.data.msg)||(e&&e.message))||this.lang.furll_domain_add_failed;if(msg==='furll_domain_cart_duplicate'){msg=this.lang.furll_domain_cart_duplicate}this.error=msg;this.$message.error(msg)}finally{this.buying=false}},price(v){return v||'--'},priceCurrency(v){return v.currency||''}
+  }});
+})();
+</script>
