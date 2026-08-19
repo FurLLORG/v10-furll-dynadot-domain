@@ -1,11 +1,11 @@
 # FurLLORG Dynadot Domain Module
 
-IDCsmart（魔方业务系统）的 `server` 模块插件，对接 Dynadot RESTful API v2，提供域名搜索、注册、域名资料查看和部分域名管理能力。
+ZJMF-CBAP（魔方业务系统）的 `server` 模块插件，对接 Dynadot RESTful API v2，提供域名搜索、注册、域名资料查看和部分域名管理能力。
 
 - 开发者：FurLLORG
 - 版本：1.0.0
 - 许可证：MIT
-- 适用系统：IDCsmart 业务系统（需支持 server 模块插件）
+- 适用系统：ZJMF-CBAP 业务系统（需支持 server 模块插件）
 - 仓库：`v10-furll-dynadot-domain`
 
 > Dynadot API 当前为 Beta。生产启用前请以[官方 API 文档](https://www.dynadot.com/zh/domain/api-document?api-version=2.0.0)为准，并先在沙盒完成验证。
@@ -26,20 +26,20 @@ IDCsmart（魔方业务系统）的 `server` 模块插件，对接 Dynadot RESTf
 
 ### 当前未支持
 
-以下 IDCsmart 生命周期入口会明确返回“未实现”，不会伪装成成功：
+以下 ZJMF-CBAP 生命周期入口会明确返回“未实现”，不会伪装成成功：
 
 - 暂停域名（`suspendAccount`）
 - 解除暂停（`unsuspendAccount`）
 - 删除/销毁域名（`terminateAccount`）
 - 续费（`renew`）
 
-请勿把以上操作配置为自动化生产流程。实现前需要结合 Dynadot 当前端点、异步订单状态和 IDCsmart 任务契约补充测试。
+请勿把以上操作配置为自动化生产流程。实现前需要结合 Dynadot 当前端点、异步订单状态和 ZJMF-CBAP 任务契约补充测试。
 
 ## 安装教程
 
 ### 1. 准备条件
 
-1. 已安装并运行 IDCsmart 业务系统。
+1. 已安装并运行 ZJMF-CBAP 业务系统。
 2. PHP、cURL、OpenSSL 和数据库扩展由宿主面板提供。
 3. 拥有 Dynadot API Key 与 API Secret。建议先创建沙盒密钥。
 4. 服务器能够访问以下地址：
@@ -48,7 +48,7 @@ IDCsmart（魔方业务系统）的 `server` 模块插件，对接 Dynadot RESTf
 
 ### 2. 安装插件
 
-将本目录完整复制到 IDCsmart 的插件目录：
+将本目录完整复制到 ZJMF-CBAP 的插件目录：
 
 ```text
 public/plugins/server/furll_dynadot_domain/
@@ -76,7 +76,7 @@ API Secret 只在保存时提交，不会由后台读取接口返回。配置页
 
 ### 4. 创建域名商品
 
-在 IDCsmart 商品中关联 Dynadot 接口或接口分组，并启用本模块的购物车配置。用户需要在购物车选择域名、注册年限、隐私选项和已保存的联系人模板。
+在 ZJMF-CBAP 商品中关联 Dynadot 接口或接口分组，并启用本模块的购物车配置。用户需要在购物车选择域名、注册年限、隐私选项和已保存的联系人模板。
 
 ## 沙盒注意事项
 
@@ -97,7 +97,7 @@ API Secret 只在保存时提交，不会由后台读取接口返回。配置页
 
 插件首次使用时创建：
 
-- `idcsmart_module_furll_dynadot_domain_server`：按 IDCsmart 接口保存运行模式、API Key 和 AES 加密后的 API Secret。
+- `idcsmart_module_furll_dynadot_domain_server`：按 ZJMF-CBAP 接口保存运行模式、API Key 和 AES 加密后的 API Secret。
 - `idcsmart_module_furll_dynadot_domain_info_template`：保存按接口/客户隔离的联系人信息模板。
 
 删除模块最后一个接口时，生命周期钩子会删除上述表。卸载前请先备份并确认不再需要这些数据。
@@ -105,7 +105,7 @@ API Secret 只在保存时提交，不会由后台读取接口返回。配置页
 ## 目录说明
 
 ```text
-FurllDynadotDomain.php       模块入口和 IDCsmart 生命周期方法
+FurllDynadotDomain.php       模块入口和 ZJMF-CBAP 生命周期方法
 route.php                    前台/后台路由
 hooks.php                    删除接口、删除商品等面板钩子
 dynadot/                     Dynadot HTTP 客户端、适配器和工厂
@@ -120,7 +120,7 @@ template/                    后台、购物车、会员中心模板和前端语
 
 - 严禁把 API Key、API Secret、JWT、数据库密码、站点 `config.php` 或运行时缓存提交到仓库。
 - API Secret 在数据库中 AES 加密保存，后台读取接口只返回是否已配置，不返回密钥明文。
-- 本插件不再根据任意请求 `Origin` 开启带凭据跨域；请通过 IDCsmart 同源页面或由站点统一配置可信跨域策略。
+- 本插件不再根据任意请求 `Origin` 开启带凭据跨域；请通过 ZJMF-CBAP 同源页面或由站点统一配置可信跨域策略。
 - 联系人资料包含姓名、邮箱、电话和地址等个人信息，请按当地法律和站点隐私政策处理。
 - 交易类 Dynadot 请求必须使用 HTTPS、请求 ID 和签名；不要在日志中输出完整请求头、签名或联系人资料。
 
@@ -135,14 +135,14 @@ find . -name '*.php' -print0 | xargs -0 -n1 /xp/server/php/php-7.3/bin/php -l
 常见问题：
 
 - **连接测试失败**：检查模式、API Key/Secret、服务器网络和 Dynadot 沙盒是否已激活。
-- **订单一直开通中**：确认 IDCsmart `cron/task.php` 任务消费者由 supervisor 或 cron 常驻运行。
+- **订单一直开通中**：确认 ZJMF-CBAP `cron/task.php` 任务消费者由 supervisor 或 cron 常驻运行。
 - **价格不可用**：检查域名是否可用、接口配置是否正确，以及 Dynadot API 返回的价格字段。
 - **Secret 被清空**：后台保存时 Secret 留空代表保留原值；只有提交新 Secret 才会替换。
 - **接口返回格式错误**：模块方法统一使用 `status=200` 或 `status=400`，真实上游错误会放在 `msg` 中。
 
 ## 升级和卸载
 
-升级时覆盖插件目录并重新安装/刷新模块；升级前备份数据库和插件文件。卸载前停止相关开通任务、确认没有待处理订单，并按 IDCsmart 模块生命周期清理配置。删除插件目录不会自动恢复已经注册的域名，也不会撤销 Dynadot 账户中的交易。
+升级时覆盖插件目录并重新安装/刷新模块；升级前备份数据库和插件文件。卸载前停止相关开通任务、确认没有待处理订单，并按 ZJMF-CBAP 模块生命周期清理配置。删除插件目录不会自动恢复已经注册的域名，也不会撤销 Dynadot 账户中的交易。
 
 ## 开源协议
 
