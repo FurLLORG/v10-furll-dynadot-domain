@@ -2,6 +2,8 @@
 
 ZJMF-CBAP（魔方业务系统）的 `server` 模块插件，对接 Dynadot RESTful API v2，提供域名搜索、注册、域名资料查看和部分域名管理能力。
 
+> 本项目由 AI 辅助编程完成，包括代码分析、Hook/调用链查找、问题排查、代码自动补全和测试验证；最终代码与发布内容由项目维护者审核确认。
+
 - 开发者：FurLLORG
 - 版本：1.1.0
 - 许可证：MIT
@@ -43,7 +45,6 @@ ZJMF-CBAP（魔方业务系统）的 `server` 模块插件，对接 Dynadot REST
 - 修复 Dynadot 续费请求字段：使用 `duration`，不再发送错误的 `years`。
 - 续费成功后同步 Dynadot 返回的注册局到期时间到面板 `host.due_time`。
 - 修复会员中心动态模板的组件注册、公共语言键和静态资源缓存问题。
-- 续费付款弹窗依赖站点公共 `payDialog` 组件；若站点公共组件文件也已更新，需同步部署 `public/clientarea/template/pc/default/components/payDialog/payDialog.js`。
 - 插件更新后可清理插件、路由、语言和模板缓存，无需删除接口或重装插件。
 
 ## 安装教程
