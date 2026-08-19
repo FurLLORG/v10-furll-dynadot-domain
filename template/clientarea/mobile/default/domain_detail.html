@@ -48,9 +48,10 @@
   <div class="furll-domain-mobile">
     <div class="fm-head">
       <div class="fm-title"><h2>{{ domain }}</h2><p class="fm-sub" v-if="host.product_name || host.billing_cycle_name">{{ host.product_name }}<template v-if="host.product_name && host.billing_cycle_name"> · </template>{{ host.billing_cycle_name }}</p></div>
-      <div class="fm-actions">
+        <div class="fm-actions">
         <span class="fm-badge" v-if="statusName">{{ statusName }}</span>
         <span class="fm-badge fm-badge-sandbox" v-if="mode === 'sandbox'">{{ lang.furll_domain_detail_sandbox }}</span>
+        <button class="fm-btn fm-btn-primary" v-if="canRenew" @click="showRenew">{{ lang.cloud_re_btn || '续费' }}</button>
         <button class="fm-btn fm-btn-primary" v-if="canPush" @click="openPush">{{ lang.furll_domain_push_button }}</button>
       </div>
     </div>
@@ -113,15 +114,46 @@
         <div class="fm-modal-foot" v-else><button class="fm-btn fm-btn-primary" @click="goHostList">{{ lang.furll_domain_push_back_list }}</button></div>
       </div>
     </div>
+    <renew-dialog v-if="id" ref="renewDialog" :id="id" :product-id="host.product_id" :is-demand-fee="false" @renew-success="handleRenewSuccess" @renew-pay="handleRenewPay"></renew-dialog>
+    <pay-dialog ref="payDialog" @payok="handlePaySuccess" @paycancel="handlePayCancel"></pay-dialog>
   </div>
 </div>
 
 <script src="/plugins/server/furll_dynadot_domain/template/clientarea/pc/default/lang/index.js?v=1.1.0"></script>
+<script src="/clientarea/template/pc/default/components/discountCode/discountCode.js"></script>
+<script src="/clientarea/template/pc/default/components/payDialog/payDialog.js?v=1.1.0"></script>
+<script src="/clientarea/template/pc/default/components/renewDialog/renewDialog.js?v=1.1.0"></script>
+<script src="/clientarea/template/pc/default/api/common.js"></script>
 <script>
 (function () {
   if (window.furllDomainMobileLoaded) return;
   window.furllDomainMobileLoaded = true;
-  Vue.prototype.lang = Object.assign(window.lang || {}, window.module_lang || {});
+  window.lang = Object.assign({
+    cloud_re_btn: '续费',
+    common_cloud_title10: '续费',
+    common_cloud_label11: '合计',
+    mf_demand_tip5: '转为包年包月',
+    mf_demand_tip9: '确定',
+    forbid_renew_tip: '暂不可续费',
+    forbid_renew_tip_desc: '该产品当前禁止续费',
+    auto_renew_sure: '确定',
+    pay_text12: '确定',
+    shoppingCar_tip_text2: '用户等级折扣',
+    shoppingCar_tip_text4: '优惠码折扣',
+    shoppingCar_tip_text9: '请输入优惠码',
+    shoppingCar_tip_text12: '优惠码无效',
+    shoppingCar_tip_text13: '优惠码已使用',
+    shoppingCar_tip_text14: '优惠码验证失败',
+    goods_text8: '优惠码',
+    login_text10: '登录后继续'
+  }, window.lang || {}, window.module_lang || {});
+  Vue.prototype.lang = window.lang;
+  if (window.renewDialog) {
+    Vue.component('renew-dialog', window.renewDialog);
+  }
+  if (window.payDialog) {
+    Vue.component('pay-dialog', window.payDialog);
+  }
   new Vue({
     el: '#furllDomainMobile',
     data: function () { return {
@@ -129,7 +161,7 @@
       push: { show:false, modify:'0', templateId:'', targetClientId:'', targetAccount:'', contact:{name:'',org:'',email:'',phone:'',address1:'',city:'',state:'',zip:'',country:''}, submitting:false, msg:'', done:false, doneMsg:'' }, countries:[], templates:[], templateModal:{show:false,id:0,name:'',contact:{first_name:'',last_name:'',org:'',email:'',phone_cc:'+86',phone:'',address1:'',city:'',state:'',zip:'',country:''},msg:''}
     }; },
     computed: {
-      host: function(){return (this.data&&this.data.host)||{};}, info:function(){return (this.data&&this.data.info)||{};}, contact:function(){return (this.data&&this.data.registrant_contact)||{};}, domain:function(){return (this.data&&this.data.domain)||this.host.name||'';}, mode:function(){return (this.data&&this.data.mode)||'';}, nsList:function(){return (this.nsData&&this.nsData.nameserver_list)||this.info.nameservers||[];}, glueType:function(){return (this.nsData&&this.nsData.glue_type)||'';}, canEditNs:function(){return this.host.status==='Active';}, canPush:function(){return this.host.status==='Active';},
+      host: function(){return (this.data&&this.data.host)||{};}, info:function(){return (this.data&&this.data.info)||{};}, contact:function(){return (this.data&&this.data.registrant_contact)||{};}, domain:function(){return (this.data&&this.data.domain)||this.host.name||'';}, mode:function(){return (this.data&&this.data.mode)||'';}, nsList:function(){return (this.nsData&&this.nsData.nameserver_list)||this.info.nameservers||[];}, glueType:function(){return (this.nsData&&this.nsData.glue_type)||'';}, canEditNs:function(){return this.host.status==='Active';}, canPush:function(){return this.host.status==='Active';}, canRenew:function(){return (this.host.status==='Active'||this.host.status==='Suspended') && this.host.billing_cycle!=='onetime' && this.host.billing_cycle!=='on_demand' && this.host.billing_cycle!=='free' && !this.host.renew_forbidden;},
       statusName:function(){var m={Unpaid:'furll_domain_detail_status_unpaid',Pending:'furll_domain_detail_status_pending',Active:'furll_domain_detail_status_active',Suspended:'furll_domain_detail_status_suspended',Deleted:'furll_domain_detail_status_deleted',Failed:'furll_domain_detail_status_failed'};return m[this.host.status]?this.lang[m[this.host.status]]:(this.host.status||'');},
       privacyLabel:function(){var m={full:'furll_domain_detail_privacy_full',partial:'furll_domain_detail_privacy_partial',off:'furll_domain_detail_privacy_off'};return m[this.info.privacy]?this.lang[m[this.info.privacy]]:(this.info.privacy||'--');}, lockLabel:function(){return typeof this.info.locked!=='boolean'?'--':(this.info.locked?this.lang.furll_domain_detail_lock_on:this.lang.furll_domain_detail_lock_off);}, autoRenewLabel:function(){return typeof this.info.auto_renew!=='boolean'?(this.info.renew_option||'--'):(this.info.auto_renew?this.lang.furll_domain_detail_auto_renew_on:this.lang.furll_domain_detail_auto_renew_off);},
       glueTypeLabel:function(){var gt=String(this.glueType||'').toUpperCase();if(gt==='DNS')return this.lang.furll_domain_detail_glue_dns||'Dynadot DNS Hosting';if(gt==='NAME_SERVERS'){var a=this.nsList;return !a.length||a.every(function(ns){return /(^|\.)dynadot\.com$/i.test(String(ns||'').trim());})?(this.lang.furll_domain_detail_glue_dns||'Dynadot DNS Hosting'):(this.lang.furll_domain_detail_glue_name_servers||'Custom DNS');}return this.glueType||'--';},
@@ -138,6 +170,11 @@
       pushFields:function(){return [{key:'name',label:this.lang.furll_domain_detail_contact_name,placeholder:this.lang.furll_domain_push_contact_ph_name},{key:'org',label:this.lang.furll_domain_detail_contact_org,placeholder:this.lang.furll_domain_push_contact_ph_org},{key:'email',label:this.lang.furll_domain_detail_contact_email,placeholder:'name@example.com'},{key:'phone',label:this.lang.furll_domain_detail_contact_phone,placeholder:this.lang.furll_domain_push_contact_ph_phone},{key:'address1',label:this.lang.furll_domain_detail_contact_address,placeholder:this.lang.furll_domain_push_contact_ph_address},{key:'city',label:this.lang.furll_domain_detail_contact_city,placeholder:this.lang.furll_domain_push_contact_ph_city},{key:'state',label:this.lang.furll_domain_detail_contact_state,placeholder:this.lang.furll_domain_push_contact_ph_state},{key:'zip',label:this.lang.furll_domain_detail_contact_zip,placeholder:this.lang.furll_domain_push_contact_ph_zip},{key:'country',label:this.lang.furll_domain_detail_contact_country,placeholder:this.lang.furll_domain_push_contact_ph_country}];}
     },
     methods: {
+      showRenew:function(){if(this.$refs.renewDialog&&this.$refs.renewDialog.showRenew)this.$refs.renewDialog.showRenew(false);},
+      handleRenewSuccess:function(){window.location.reload();},
+      handleRenewPay:function(orderId,amount){if(this.$refs.payDialog&&this.$refs.payDialog.showPayDialog)this.$refs.payDialog.showPayDialog(orderId,amount);},
+      handlePaySuccess:function(){window.location.reload();},
+      handlePayCancel:function(){ },
       loadCountries:function(){var self=this;Axios.get('/country').then(function(r){self.countries=(r.data&&r.data.data&&r.data.data.list)||[];});},
       loadTemplates:function(){var self=this;Axios.get('/furll_dynadot_domain/info_templates',{params:{server_id:this.host.server_id}}).then(function(r){self.templates=(r.data&&r.data.data&&r.data.data.list)||[];});},
       openTemplate:function(){this.templateModal.show=true;this.templateModal.id=0;this.templateModal.name='';this.templateModal.msg='';},

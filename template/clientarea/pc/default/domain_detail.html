@@ -86,6 +86,7 @@
           <span class="fd-badge" :class="'fd-badge-' + (host.status || '').toLowerCase()" v-if="statusName">{{ statusName }}</span>
           <span class="fd-badge fd-badge-sandbox" v-if="mode === 'sandbox'">{{ lang.furll_domain_detail_sandbox }}</span>
         </div>
+        <button class="fd-btn fd-btn-primary" v-if="canRenew" @click="showRenew">{{ lang.cloud_re_btn || '续费' }}</button>
         <button class="fd-btn fd-btn-primary" v-if="canPush" @click="openPush">{{ lang.furll_domain_push_button }}</button>
       </div>
     </div>
@@ -248,16 +249,47 @@
         </div>
       </div>
     </div>
+    <renew-dialog v-if="id" ref="renewDialog" :id="id" :product-id="host.product_id" :is-demand-fee="false" @renew-success="handleRenewSuccess" @renew-pay="handleRenewPay"></renew-dialog>
+    <pay-dialog ref="payDialog" @payok="handlePaySuccess" @paycancel="handlePayCancel"></pay-dialog>
   </div>
 </div>
 
 <script src="/plugins/server/furll_dynadot_domain/template/clientarea/pc/default/lang/index.js?v=1.1.0"></script>
+<script src="/clientarea/template/pc/default/components/discountCode/discountCode.js"></script>
+<script src="/clientarea/template/pc/default/components/payDialog/payDialog.js?v=1.1.0"></script>
+<script src="/clientarea/template/pc/default/components/renewDialog/renewDialog.js?v=1.1.0"></script>
+<script src="/clientarea/template/pc/default/api/common.js"></script>
 <script>
 (function () {
   if (window.furllDomainDetailLoaded) return;
   window.furllDomainDetailLoaded = true;
 
-  Vue.prototype.lang = Object.assign(window.lang || {}, window.module_lang || {});
+  window.lang = Object.assign({
+    cloud_re_btn: '续费',
+    common_cloud_title10: '续费',
+    common_cloud_label11: '合计',
+    mf_demand_tip5: '转为包年包月',
+    mf_demand_tip9: '确定',
+    forbid_renew_tip: '暂不可续费',
+    forbid_renew_tip_desc: '该产品当前禁止续费',
+    auto_renew_sure: '确定',
+    pay_text12: '确定',
+    shoppingCar_tip_text2: '用户等级折扣',
+    shoppingCar_tip_text4: '优惠码折扣',
+    shoppingCar_tip_text9: '请输入优惠码',
+    shoppingCar_tip_text12: '优惠码无效',
+    shoppingCar_tip_text13: '优惠码已使用',
+    shoppingCar_tip_text14: '优惠码验证失败',
+    goods_text8: '优惠码',
+    login_text10: '登录后继续'
+  }, window.lang || {}, window.module_lang || {});
+  Vue.prototype.lang = window.lang;
+  if (window.renewDialog) {
+    Vue.component('renew-dialog', window.renewDialog);
+  }
+  if (window.payDialog) {
+    Vue.component('pay-dialog', window.payDialog);
+  }
 
   new Vue({
     el: '#furllDomainDetail',
@@ -358,6 +390,11 @@
       canPush: function () {
         return this.host.status === 'Active';
       },
+      canRenew: function () {
+        return (this.host.status === 'Active' || this.host.status === 'Suspended') &&
+          this.host.billing_cycle !== 'onetime' && this.host.billing_cycle !== 'on_demand' &&
+          this.host.billing_cycle !== 'free' && !this.host.renew_forbidden;
+      },
       templateFields: function () {
         return [
           { key: 'first_name', label: this.lang.furll_domain_detail_contact_first_name },
@@ -388,6 +425,23 @@
       }
     },
     methods: {
+      showRenew: function () {
+        if (this.$refs.renewDialog && this.$refs.renewDialog.showRenew) {
+          this.$refs.renewDialog.showRenew(false);
+        }
+      },
+      handleRenewSuccess: function () {
+        window.location.reload();
+      },
+      handleRenewPay: function (orderId, amount) {
+        if (this.$refs.payDialog && this.$refs.payDialog.showPayDialog) {
+          this.$refs.payDialog.showPayDialog(orderId, amount);
+        }
+      },
+      handlePaySuccess: function () {
+        window.location.reload();
+      },
+      handlePayCancel: function () {},
       loadCountries: function () {
         var self = this;
         Axios.get('/country').then(function (r) { self.countries = (r.data && r.data.data && r.data.data.list) || []; });

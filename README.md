@@ -3,7 +3,7 @@
 ZJMF-CBAP（魔方业务系统）的 `server` 模块插件，对接 Dynadot RESTful API v2，提供域名搜索、注册、域名资料查看和部分域名管理能力。
 
 - 开发者：FurLLORG
-- 版本：1.0.0
+- 版本：1.1.0
 - 许可证：MIT
 - 适用系统：ZJMF-CBAP 业务系统（需支持 server 模块插件）
 - 仓库：`v10-furll-dynadot-domain`
@@ -19,6 +19,8 @@ ZJMF-CBAP（魔方业务系统）的 `server` 模块插件，对接 Dynadot REST
 - 购物车域名搜索、可用性判断和注册价格展示。
 - 结算后保存域名、年限、隐私和注册联系人配置。
 - 支付成功后的域名注册任务，包含已注册成功和“已属于当前账户”场景的幂等处理。
+- 续费订单支付后的 Dynadot 域名续费，按面板续费周期换算 1-10 年，并保存上游返回的到期时间。
+- 续费订单自动任务执行与失败记录，使用 Dynadot v2 要求的 `duration` 字段。
 - 前台域名详情、注册局信息、Nameserver 查询/更新和域名 Push。
 - 联系人信息模板的新增、读取、修改和删除，并按接口与客户隔离。
 - PC 购物车、移动端购物车、PC 会员中心和后台配置页面。
@@ -31,9 +33,18 @@ ZJMF-CBAP（魔方业务系统）的 `server` 模块插件，对接 Dynadot REST
 - 暂停域名（`suspendAccount`）
 - 解除暂停（`unsuspendAccount`）
 - 删除/销毁域名（`terminateAccount`）
-- 续费（`renew`）
 
-请勿把以上操作配置为自动化生产流程。实现前需要结合 Dynadot 当前端点、异步订单状态和 ZJMF-CBAP 任务契约补充测试。
+请勿把以上操作配置为自动化生产流程。
+
+## v1.1.0 发布说明
+
+- 新增域名续费周期接口 `durationPrice()`，支持会员中心和后台续费页面。
+- 接入 PC/移动端续费弹窗、订单支付弹窗和续费成功刷新。
+- 修复 Dynadot 续费请求字段：使用 `duration`，不再发送错误的 `years`。
+- 续费成功后同步 Dynadot 返回的注册局到期时间到面板 `host.due_time`。
+- 修复会员中心动态模板的组件注册、公共语言键和静态资源缓存问题。
+- 续费付款弹窗依赖站点公共 `payDialog` 组件；若站点公共组件文件也已更新，需同步部署 `public/clientarea/template/pc/default/components/payDialog/payDialog.js`。
+- 插件更新后可清理插件、路由、语言和模板缓存，无需删除接口或重装插件。
 
 ## 安装教程
 
@@ -137,6 +148,9 @@ find . -name '*.php' -print0 | xargs -0 -n1 /xp/server/php/php-7.3/bin/php -l
 - **连接测试失败**：检查模式、API Key/Secret、服务器网络和 Dynadot 沙盒是否已激活。
 - **订单一直开通中**：确认 ZJMF-CBAP `cron/task.php` 任务消费者由 supervisor 或 cron 常驻运行。
 - **价格不可用**：检查域名是否可用、接口配置是否正确，以及 Dynadot API 返回的价格字段。
+- **续费失败**：确认域名配置存在 `registered` 标记，且主机 `billing_cycle_time` 是完整的整年周期；模块会把 Dynadot 的 4xx/5xx 错误统一转为面板可识别的失败结果。
+- **续费任务失败**：优先查看主机失败动作记录；Dynadot v2 续费请求必须使用 `duration` 字段。修复代码后需重新触发失败订单，已付款订单不会自动重复扣款。
+- **站内到期时间与注册局不一致**：刷新域名详情会读取注册局到期时间；续费成功后插件会同步 `host.due_time`。历史数据可根据注册局返回值人工校正。
 - **Secret 被清空**：后台保存时 Secret 留空代表保留原值；只有提交新 Secret 才会替换。
 - **接口返回格式错误**：模块方法统一使用 `status=200` 或 `status=400`，真实上游错误会放在 `msg` 中。
 

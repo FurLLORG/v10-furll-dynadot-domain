@@ -60,9 +60,11 @@ class DynadotAdapter
      */
     public function renewDomain(string $domainName, int $years): array
     {
-        return $this->client->post('/restful/v2/domains/' . $domainName . '/renew', [
+        $domainName = strtolower(trim($domainName));
+
+        return $this->client->post('/restful/v2/domains/' . rawurlencode($domainName) . '/renew', [
             'domainName' => $domainName,
-            'years'      => $years,
+            'duration'   => $years,
         ]);
     }
 

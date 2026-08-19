@@ -22,7 +22,7 @@ class FurllDynadotDomain
      */
     public function metaData()
     {
-        return ['display_name' => 'FurLLORG 域名注册', 'version' => '1.0.0'];
+        return ['display_name' => 'FurLLORG 域名注册', 'version' => '1.1.0'];
     }
 
     /**
@@ -152,11 +152,142 @@ class FurllDynadotDomain
     }
 
     /**
-     * 续费后调用
+     * 续费订单支付后调用
      */
     public function renew($param)
     {
-        return ['status' => 400, 'msg' => lang_plugins('furll_domain_not_implemented')];
+        $host = $param['host'] ?? [];
+        $server = $param['server'] ?? [];
+        $config = $this->getHostConfig($host);
+        $domain = strtolower(trim((string)($config['domain'] ?? $host['name'] ?? '')));
+
+        if (empty($server) || (int)(is_array($server) ? ($server['id'] ?? 0) : ($server->id ?? 0)) <= 0) {
+            return ['status' => 400, 'msg' => lang_plugins('furll_domain_server_is_not_exist')];
+        }
+        if (!$this->isValidDomain($domain) || $this->isCnDomain($domain)) {
+            return ['status' => 400, 'msg' => lang_plugins('furll_domain_renew_config_invalid')];
+        }
+        if (empty($config['registered'])) {
+            return ['status' => 400, 'msg' => lang_plugins('furll_domain_not_registered')];
+        }
+
+        $years = $this->getRenewYears($host, $config);
+        if ($years < 1 || $years > 10) {
+            return ['status' => 400, 'msg' => lang_plugins('furll_domain_renew_duration_invalid')];
+        }
+
+        $result = DynadotClientFactory::makeAdapter($server)->renewDomain($domain, $years);
+        $status = (int)($result['status'] ?? 400);
+        if (!in_array($status, [200, 201, 202], true)) {
+            return [
+                'status' => 400,
+                'msg' => (string)($result['msg'] ?? '') ?: lang_plugins('furll_domain_renew_failed'),
+                'data' => $result['data'] ?? [],
+            ];
+        }
+
+        $data = is_array($result['data'] ?? null) ? $result['data'] : [];
+        $expirationDate = $data['expiration_date'] ?? ($data['domain']['expiration_date'] ?? null);
+        if ($expirationDate === null || $expirationDate === '') {
+            $infoResult = DynadotClientFactory::makeAdapter($server)->getDomainInfo($domain);
+            $domainInfo = is_array($infoResult['data']['domain_info'] ?? null) ? $infoResult['data']['domain_info'] : [];
+            $expirationDate = $domainInfo['expiration_date'] ?? null;
+        }
+        $expirationTimestamp = $this->normalizeDynadotTimestamp($expirationDate);
+        $hostId = (int)(is_array($host) ? ($host['id'] ?? 0) : ($host->id ?? 0));
+        if ($hostId > 0) {
+            $config['last_renew_years'] = $years;
+            $config['last_renew_time'] = time();
+            if ($expirationDate !== null && $expirationDate !== '') {
+                $config['expiration_date'] = $expirationDate;
+            }
+            $update = [
+                'base_config_options' => json_encode($config, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
+            ];
+            if ($expirationTimestamp > 0) {
+                $update['due_time'] = $expirationTimestamp;
+            }
+            \app\common\model\HostModel::where('id', $hostId)->update($update);
+        }
+
+        return [
+            'status' => 200,
+            'msg' => lang_plugins('furll_domain_renew_success'),
+            'data' => $data,
+        ];
+    }
+
+    private function normalizeDynadotTimestamp($value): int
+    {
+        if ($value === null || $value === '') {
+            return 0;
+        }
+        if (is_numeric($value)) {
+            $timestamp = (int)$value;
+        } else {
+            $timestamp = strtotime((string)$value);
+        }
+        if ($timestamp > 100000000000) {
+            $timestamp = (int)($timestamp / 1000);
+        }
+        return $timestamp > 0 ? $timestamp : 0;
+    }
+
+    private function getRenewYears($host, array $config): int
+    {
+        $billingSeconds = (int)(is_array($host) ? ($host['billing_cycle_time'] ?? 0) : ($host->billing_cycle_time ?? 0));
+        if ($billingSeconds > 0) {
+            $yearSeconds = 365 * 24 * 3600;
+            if ($billingSeconds % $yearSeconds !== 0) {
+                return 0;
+            }
+            return (int)($billingSeconds / $yearSeconds);
+        }
+        return (int)($config['duration'] ?? 0);
+    }
+
+    /**
+     * 获取当前域名可续费周期
+     */
+    public function durationPrice($param)
+    {
+        $host = $param['host'] ?? [];
+        $status = (string)(is_array($host) ? ($host['status'] ?? '') : ($host->status ?? ''));
+        $billingCycle = (string)(is_array($host) ? ($host['billing_cycle'] ?? '') : ($host->billing_cycle ?? ''));
+        $billingCycleName = (string)(is_array($host) ? ($host['billing_cycle_name'] ?? '') : ($host->billing_cycle_name ?? ''));
+        $duration = (int)(is_array($host) ? ($host['billing_cycle_time'] ?? 0) : ($host->billing_cycle_time ?? 0));
+        $renewAmount = (float)(is_array($host) ? ($host['renew_amount'] ?? 0) : ($host->renew_amount ?? 0));
+        $basePrice = (float)(is_array($host) ? ($host['base_price'] ?? $renewAmount) : ($host->base_price ?? $renewAmount));
+
+        if ($status === '' || !in_array($status, ['Active', 'Suspended'], true)) {
+            return ['status' => 400, 'msg' => lang_plugins('furll_domain_host_not_exist')];
+        }
+        if (in_array($billingCycle, ['onetime', 'on_demand', 'free'], true) || $duration <= 0) {
+            return ['status' => 400, 'msg' => lang_plugins('furll_domain_renew_config_invalid')];
+        }
+        if ($billingCycleName === '') {
+            $billingCycleName = lang_plugins('furll_domain_billing_year_unit');
+        }
+        if ($basePrice <= 0) {
+            $basePrice = $renewAmount;
+        }
+
+        return [
+            'status' => 200,
+            'msg' => lang_plugins('success_message'),
+            'data' => [[
+                'id' => 0,
+                'billing_cycle' => $billingCycleName,
+                'name_show' => $billingCycleName,
+                'duration' => $duration,
+                'price' => $renewAmount,
+                'renew_price' => $renewAmount,
+                'base_price' => $basePrice,
+                'price_save' => $renewAmount,
+                'renew_amount' => $renewAmount,
+                'prr' => 1,
+            ]],
+        ];
     }
 
     /**
