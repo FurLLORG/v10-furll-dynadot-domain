@@ -1,156 +1,49 @@
-# FurLLORG Dynadot Domain Module
+# v10-furll-dynadot-domain
 
-ZJMF-CBAP（魔方业务系统）的 `server` 模块插件，对接 Dynadot RESTful API v2，提供域名搜索、注册、域名资料查看和部分域名管理能力。
+ZJMF-CBAP的server模块插件，对接Dynadot RESTful API v2，提供域名搜索、注册、续费、资料查看与部分管理能力。
 
-> 本项目由 AI 辅助编程完成，包括代码分析、Hook/调用链查找、问题排查、代码自动补全和测试验证；最终代码与发布内容由项目维护者审核确认。
+## 已支持
 
-- 开发者：FurLLORG
-- 版本：1.1.0
-- 许可证：MIT
-- 适用系统：ZJMF-CBAP 业务系统（需支持 server 模块插件）
-- 仓库：`v10-furll-dynadot-domain`
+- 沙盒与生产环境配置、连接测试
+- 购物车域名搜索、可用性判断与注册价格
+- 注册、续费、域名详情、注册局信息、Nameserver查询与更新
+- 联系人模板增删改查
+- 简中、繁中、英文语言包
 
-> Dynadot API 当前为 Beta。生产启用前请以[官方 API 文档](https://www.dynadot.com/zh/domain/api-document?api-version=2.0.0)为准，并先在沙盒完成验证。
+## 未支持
 
-## 功能范围
+`suspendAccount`、`unsuspendAccount`、`terminateAccount`会返回未实现。
 
-### 已提供
+## 安装
 
-- Dynadot 沙盒/生产环境配置。
-- API 连接测试（Bearer API Key、HMAC-SHA256 `X-Signature`）。
-- 购物车域名搜索、可用性判断和注册价格展示。
-- 结算后保存域名、年限、隐私和注册联系人配置。
-- 支付成功后的域名注册任务，包含已注册成功和“已属于当前账户”场景的幂等处理。
-- 续费订单支付后的 Dynadot 域名续费，按面板续费周期换算 1-10 年，并保存上游返回的到期时间。
-- 续费订单自动任务执行与失败记录，使用 Dynadot v2 要求的 `duration` 字段。
-- 前台域名详情、注册局信息、Nameserver 查询/更新和域名 Push。
-- 联系人信息模板的新增、读取、修改和删除，并按接口与客户隔离。
-- PC 购物车、移动端购物车、PC 会员中心和后台配置页面。
-- 中文简体、中文繁体和英文语言包。
+把目录完整复制到：
 
-### 当前未支持
-
-以下 ZJMF-CBAP 生命周期入口会明确返回“未实现”，不会伪装成成功：
-
-- 暂停域名（`suspendAccount`）
-- 解除暂停（`unsuspendAccount`）
-- 删除/销毁域名（`terminateAccount`）
-
-请勿把以上操作配置为自动化生产流程。
-
-## v1.1.0 发布说明
-
-- 新增域名续费周期接口 `durationPrice()`，支持会员中心和后台续费页面。
-- 接入 PC/移动端续费弹窗、订单支付弹窗和续费成功刷新。
-- 修复 Dynadot 续费请求字段：使用 `duration`，不再发送错误的 `years`。
-- 续费成功后同步 Dynadot 返回的注册局到期时间到面板 `host.due_time`。
-- 修复会员中心动态模板的组件注册、公共语言键和静态资源缓存问题。
-- 插件更新后可清理插件、路由、语言和模板缓存，无需删除接口或重装插件。
-
-## 安装教程
-
-### 1. 准备条件
-
-1. 已安装并运行 ZJMF-CBAP 业务系统。
-2. PHP、cURL、OpenSSL 和数据库扩展由宿主面板提供。
-3. 拥有 Dynadot API Key 与 API Secret。建议先创建沙盒密钥。
-4. 服务器能够访问以下地址：
-   - 生产：`https://api.dynadot.com`
-   - 沙盒：`https://api-sandbox.dynadot.com`
-
-### 2. 安装插件
-
-将本目录完整复制到 ZJMF-CBAP 的插件目录：
-
-```text
+```
 public/plugins/server/furll_dynadot_domain/
 ```
 
-确认入口文件存在：
+在后台重新扫描或安装server模块，创建或编辑使用`furll_dynadot_domain`模块的接口。
 
-```text
-public/plugins/server/furll_dynadot_domain/FurllDynadotDomain.php
-```
+## 配置
 
-然后在管理员后台重新扫描/安装 server 模块，并创建或编辑一个使用 `furll_dynadot_domain` 模块的接口。首次创建接口时，插件会创建配置表和联系人模板表。
+1. 在后台创建Dynadot接口或接口分组。
+2. 选择本模块并打开配置页。
+3. 选择沙盒或生产环境。
+4. 填写API Key与Secret，测试连接后保存。
 
-> 从已经安装过旧版本升级时，请覆盖插件文件后在后台重新安装/刷新模块，使新增路由、模板和语言文件生效。不要删除数据库表。
+Secret留空保存会保留原值。
 
-### 3. 配置接口
+## 说明
 
-1. 在后台创建 Dynadot 接口或接口分组。
-2. 为接口选择本模块，并打开接口配置页。
-3. 开发阶段选择“沙盒”，生产业务选择“生产”。
-4. 填写 API Key 和 Secret，点击“测试连接”。
-5. 测试通过后保存配置。
-
-API Secret 只在保存时提交，不会由后台读取接口返回。配置页显示“已配置”时，Secret 留空保存会保留数据库中的原值；需要更换密钥时直接输入新值。
-
-### 4. 创建域名商品
-
-在 ZJMF-CBAP 商品中关联 Dynadot 接口或接口分组，并启用本模块的购物车配置。用户需要在购物车选择域名、注册年限、隐私选项和已保存的联系人模板。
-
-## 沙盒注意事项
-
-- 沙盒注册接口实测不接受 `currency` 参数，插件在沙盒注册时会自动跳过该参数。
-- 沙盒搜索价格统一按 USD 返回，`currency` 参数不一定生效。
-- 沙盒搜索的 `available` 是模拟数据，不代表生产域名真实可注册状态。
-- 不要用沙盒结果判断真实扣款、续费或转移结果。
-
-## 支持范围与定价限制
-
-- 当前域名校验接受 ASCII 域名格式，并明确拒绝 `.cn` 域名。
-- 注册价格按 Dynadot 返回的一年注册价乘以年限计算，未覆盖阶梯价、Premium、隐私附加费、税费等复杂定价。
-- Dynadot 返回 `202 Accepted` 时，插件会按已接受处理保存当前结果；生产环境应结合订单查询或 Webhook 做最终状态闭环。
-- Dynadot API 为 Beta，端点、字段和错误信息可能变化。
-- 插件一次只处理一个域名，不提供批量注册、批量更新或批量删除。
+- 仅接受ASCII域名，拒绝`.cn`
+- 注册价格按一年价乘以年限计算，未覆盖阶梯价、Premium、隐私费与税费
+- 一次只处理一个域名，不支持批量
+- Dynadot API当前为Beta，端点与字段可能变化
 
 ## 数据表
 
-插件首次使用时创建：
+`idcsmart_module_furll_dynadot_domain_server`保存接口配置与加密后的Secret；`idcsmart_module_furll_dynadot_domain_info_template`保存联系人模板。
 
-- `idcsmart_module_furll_dynadot_domain_server`：按 ZJMF-CBAP 接口保存运行模式、API Key 和 AES 加密后的 API Secret。
-- `idcsmart_module_furll_dynadot_domain_info_template`：保存按接口/客户隔离的联系人信息模板。
+## License
 
-删除模块最后一个接口时，生命周期钩子会删除上述表。卸载前请先备份并确认不再需要这些数据。
-
-## 目录说明
-
-```text
-FurllDynadotDomain.php       模块入口和 ZJMF-CBAP 生命周期方法
-route.php                    前台/后台路由
-hooks.php                    删除接口、删除商品等面板钩子
-dynadot/                     Dynadot HTTP 客户端、适配器和工厂
-controller/                  前台域名接口、联系人模板接口、后台配置接口
-model/                       配置和联系人模板模型
-validate/                    后台配置校验
-lang/                        PHP 后端语言包
-template/                    后台、购物车、会员中心模板和前端语言包
-```
-
-## 测试与排障
-
-推荐使用项目自带 PHP 7.3 CLI（需包含 `pdo_mysql`、`curl` 和 `openssl`）执行语法检查：
-
-```bash
-find . -name '*.php' -print0 | xargs -0 -n1 /xp/server/php/php-7.3/bin/php -l
-```
-
-常见问题：
-
-- **连接测试失败**：检查模式、API Key/Secret、服务器网络和 Dynadot 沙盒是否已激活。
-- **订单一直开通中**：确认 ZJMF-CBAP `cron/task.php` 任务消费者由 supervisor 或 cron 常驻运行。
-- **价格不可用**：检查域名是否可用、接口配置是否正确，以及 Dynadot API 返回的价格字段。
-- **续费失败**：确认域名配置存在 `registered` 标记，且主机 `billing_cycle_time` 是完整的整年周期；模块会把 Dynadot 的 4xx/5xx 错误统一转为面板可识别的失败结果。
-- **续费任务失败**：优先查看主机失败动作记录；Dynadot v2 续费请求必须使用 `duration` 字段。修复代码后需重新触发失败订单，已付款订单不会自动重复扣款。
-- **站内到期时间与注册局不一致**：刷新域名详情会读取注册局到期时间；续费成功后插件会同步 `host.due_time`。历史数据可根据注册局返回值人工校正。
-- **Secret 被清空**：后台保存时 Secret 留空代表保留原值；只有提交新 Secret 才会替换。
-- **接口返回格式错误**：模块方法统一使用 `status=200` 或 `status=400`，真实上游错误会放在 `msg` 中。
-
-## 升级和卸载
-
-升级时覆盖插件目录并重新安装/刷新模块；升级前备份数据库和插件文件。卸载前停止相关开通任务、确认没有待处理订单，并按 ZJMF-CBAP 模块生命周期清理配置。删除插件目录不会自动恢复已经注册的域名，也不会撤销 Dynadot 账户中的交易。
-
-## 开源协议
-
-本项目以 MIT License 发布，详见仓库根目录 [`LICENSE`](./LICENSE)。
+MIT，见`LICENSE`。
